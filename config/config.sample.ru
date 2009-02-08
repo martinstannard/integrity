@@ -17,5 +17,4 @@ Integrity::App.set :public,      Integrity.root / "public"
 Integrity::App.set :views,       Integrity.root / "views"
 Integrity::App.set :port,        8910
 
-use Rack::CommonLogger, Integrity.logger if Integrity.config[:log_debug_info]
 run Integrity::App.new

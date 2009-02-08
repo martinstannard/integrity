@@ -7,8 +7,11 @@ module Integrity
     set :root,   Integrity.root
     set :public, Integrity.root / "public"
     set :views,  Integrity.root / "views"
-
     enable :sessions
+
+    if Integrity.config[:log_debug_info]
+      use Rack::CommonLogger, Integrity.logger
+    end
 
     include Integrity
     include Integrity::Helpers

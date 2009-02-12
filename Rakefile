@@ -1,6 +1,8 @@
-require File.dirname(__FILE__) + "/lib/integrity"
 require "rake/testtask"
+require "rake/clean"
 require "rcov/rcovtask"
+
+require File.dirname(__FILE__) + "/lib/integrity"
 
 desc "Run all tests and check test coverage"
 task :default => "test:coverage:verify"
@@ -70,6 +72,65 @@ namespace :db do
     require "build"
     require "notifier"
     DataMapper.auto_migrate!
+  end
+end
+
+directory "dist/"
+CLOBBER.include("dist")
+
+def package(ext="")
+  "dist/integrity-#{Integrity.version}" + ext
+end
+
+desc "Build and install as local gem"
+task :install => package(".gem") do
+  sh "gem install #{package(".gem")}"
+end
+
+desc "Release a new version"
+task :release => ["jeweler:release", "rubyforge:publish", "rubyforge:push"]
+
+namespace :package do
+  desc "Build packages"
+  task :build => %w[.gem .tar.gz].map { |ext| package(ext) } << :"package:changelog"
+
+  task :changelog => ["dist/git-changelog.py"] do
+    sh "python dist/git-changelog.py"
+    sh "git add ChangeLog"
+    sh 'git commit -m "Regenerated ChangeLog"'
+  end
+
+  file package(".gem") => %w[dist/ integrity.gemspec] do |f|
+    sh "gem build integrity.gemspec"
+    mv File.basename(f.name), f.name
+  end
+
+  file package(".tar.gz") => %w[dist/] do |f|
+    sh <<-SH
+      git archive \
+        --prefix=integrity-#{Integrity.version}/ \
+        --format=tar \
+        HEAD | gzip > #{f.name}
+    SH
+  end
+
+  file "dist/git-changelog.py" => %w[dist/] do
+    sh "cd dist && wget http://gist.github.com/raw/62837/bc6d2c6102933c3eac5fa33afd3effd7ab97edb7/git-changelog.py"
+  end
+end
+
+namespace :rubyforge do
+  desc "Publish gem and tarball to rubyforge"
+  task :publish => ["package:build"] do |t|
+    sh <<-end
+      rubyforge add_release integrity integrity #{Integrity.version} #{package('.gem')} &&
+      rubyforge add_file    integrity integrity #{Integrity.version} #{package('.tar.gz')}
+    end
+  end
+
+  desc "Push to gitosis@rubyforge.org:integrity.git"
+  task :push do
+    sh "git push gitosis@rubyforge.org:integrity.git master"
   end
 end
 

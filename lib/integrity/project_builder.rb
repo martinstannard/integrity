@@ -11,14 +11,13 @@ module Integrity
     def build(commit)
       Integrity.log "Building #{commit.identifier} (#{@branch}) of #{@project.name} in #{export_directory} using #{@scm.name}"
       @commit = commit
-      @build = commit.build
+      @build = @commit.build
       @build.update_attributes(:started_at => Time.now)
       @scm.with_revision(commit.identifier) { run_build_script }
-      @build
-    ensure
-      @build.update_attributes(:commit_id => commit.id, :completed_at => Time.now)
       @commit.update_attributes(@scm.info(commit.identifier))
+      @build.update_attributes(:commit_id => commit.id, :completed_at => Time.now)
       send_notifications
+      @build
     end
 
     def delete_code

@@ -111,7 +111,7 @@ module Integrity
       end
 
       def all_builds
-        builds.all.sort_by {|b| b.commited_at }.reverse
+        builds.all.sort_by {|b| b.created_at }.reverse
       end
   end
 end

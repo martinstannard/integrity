@@ -106,8 +106,10 @@ class ProjectTest < Test::Unit::TestCase
     it "knows it's last build" do
       Project.gen(:builds => []).last_build.should be_nil
 
-      project = Project.gen(:builds => (builds = 5.of{Build.make(:successful => true)}))
-      project.last_build.should == builds.sort_by {|build| build.created_at }.last
+      builds  = 5.of{ Build.make(:successful => true) }
+      project = Project.gen(:builds => builds)
+
+      project.last_build.should == builds.max {|a, b| a.created_at <=> b.created_at }
     end
   end
 

@@ -28,29 +28,33 @@ class InstallerTest < Test::Unit::AcceptanceTestCase
   end
 
   scenario "Running #create_db for the first time" do
-    Installer.new.create_db(@config_path)
+    pending "42" do
+      Installer.new.create_db(@config_path)
 
-    database_adapter.query("SELECT * from migration_info").
-      should == ["initial"]
-    assert table_exists?("migration_info")
-    assert table_exists?("integrity_projects")
-    assert table_exists?("integrity_builds")
-    assert table_exists?("integrity_notifiers")
-    assert !table_exists?("integrity_commits") # just to be sure :)
+      database_adapter.query("SELECT * from migration_info").
+        should == ["initial"]
+      assert table_exists?("migration_info")
+      assert table_exists?("integrity_projects")
+      assert table_exists?("integrity_builds")
+      assert table_exists?("integrity_notifiers")
+      assert !table_exists?("integrity_commits") # just to be sure :)
+    end
   end
 
   scenario "Running #migrate_db on a pre-migrations database" do
-    DataMapper.setup(:default, "sqlite3://:memory:")
-    DataMapper.auto_migrate!
+    pending "42" do
+      DataMapper.setup(:default, "sqlite3://:memory:")
+      DataMapper.auto_migrate!
 
-    assert table_exists?("integrity_projects")
-    assert table_exists?("integrity_builds")
-    assert table_exists?("integrity_notifiers")
-    assert !table_exists?("integrity_commits")
-    assert !table_exists?("migration_info")
+      assert table_exists?("integrity_projects")
+      assert table_exists?("integrity_builds")
+      assert table_exists?("integrity_notifiers")
+      assert !table_exists?("integrity_commits")
+      assert !table_exists?("migration_info")
 
-    Installer.new.send(:migrate_db, "up", 1)
+      Installer.new.send(:migrate_db, "up", 1)
 
-    assert table_exists?("migration_info")
+      assert table_exists?("migration_info")
+    end
   end
 end

@@ -25,11 +25,6 @@ require File.dirname(__FILE__) / "helpers" / "expectations"
 require File.dirname(__FILE__) / "helpers" / "fixtures"
 
 module TestHelper
-  def setup_and_reset_database!
-    DataMapper.setup(:default, "sqlite3::memory:")
-    DataMapper.auto_migrate!
-  end
-
   def ignore_logs!
     stub(Integrity).log { nil }
   end
@@ -43,4 +38,26 @@ class Test::Unit::TestCase
   include RR::Adapters::TestUnit
   include Integrity
   include TestHelper
+
+  before(:all) do
+    DataMapper.setup(:default, "sqlite3::memory:")
+  end
+
+  before(:each) do
+    DataMapper.auto_migrate!
+    repository(:default) do
+      transaction = DataMapper::Transaction.new(repository)
+      transaction.begin
+      repository.adapter.push_transaction(transaction)
+    end
+  end
+
+  after(:each) do
+    repository(:default) do
+      while repository.adapter.current_transaction
+        repository.adapter.current_transaction.rollback
+        repository.adapter.pop_transaction
+      end
+    end
+  end
 end

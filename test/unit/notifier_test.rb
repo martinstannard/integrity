@@ -1,10 +1,6 @@
 require File.dirname(__FILE__) + "/../helpers"
 
 class NotifierTest < Test::Unit::TestCase
-  before(:each) do
-    setup_and_reset_database!
-  end
-
   specify "IRC fixture is valid and can be saved" do
     lambda do
       Notifier.generate(:irc).tap do |project|
